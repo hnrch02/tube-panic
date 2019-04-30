@@ -1,47 +1,57 @@
 
 ---------------------------------------------------------------------------------
-               ______      __            ____              _     
+               ______      __            ____              _
               /_  __/_  __/ /_  ___     / __ \____ _____  (_)____
                / / / / / / __ \/ _ \   / /_/ / __ `/ __ \/ / ___/
-              / / / /_/ / /_/ /  __/  / ____/ /_/ / / / / / /__  
-             /_/  \__,_/_.___/\___/  /_/    \__,_/_/ /_/_/\___/  
+              / / / /_/ / /_/ /  __/  / ____/ /_/ / / / / / /__
+             /_/  \__,_/_.___/\___/  /_/    \__,_/_/ /_/_/\___/
 
 ---------------------------------------------------------------------------------
 
 HISTORY
 
-Before the transistor was invented, computers used vacuum tubes. 
-Those tubes however where very prone to errors and failures. 
-In this game you are tasked with maintaining different of these computers. 
-You need to change tubes until there is nothing more to maintain. 
-Computers were very high maintenance, especially in these times, 
-and especially the six women who were programming and maintaining the ENIAC 
-could tell you that.
+Before the transistor was invented, computers used vacuum tubes as switches.
+These vacuum tubes however were rather fragile and would regularly fail.
+In this game you are tasked with maintaining one of these computers,
+the ENIAC, the very first electronic general-purpose computer.
+You will need to replace the failed tubes to keep the computer running.
+The longer you keep it running, the higher your score will be.
+If all boards fail, you loose the game.
+Computers were very high maintenance back in the day, something the
+six women responsible for programming the ENIAC could attest to.
+
+---------------------------------------------------------------------------------
+
+RUNNING IT
+
+Make sure you have Node.js >= 10 installed.
+Start it with `node index.js`
 
 ---------------------------------------------------------------------------------
 
 CONTROLS
 
-w=forward
+w=forwards
 a=left
+s=backwards
 d=right
-s=backward
+e=replace tube
 
-e=interact
 ctrl+c=exit game
 
 ---------------------------------------------------------------------------------
 
 DESCRIPTION
 
-M - Main Console
-The Main Console shows you where something needs to be fixed.
-
 B - Boards
-Boards need maintenance as soon as the Main Console tells you to.
+Boards need maintenance as soon as they flare up red. Move infront of the failed
+board and change the tube. You need to be facing the board in order to repair it.
 
 W - Wall
-Walls block your movements.
+Walls block your movement.
+
+A, V, <, > - You
+This indicated the direction you are facing.
 
 ---------------------------------------------------------------------------------
 
