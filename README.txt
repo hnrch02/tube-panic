@@ -24,8 +24,12 @@ six women responsible for programming the ENIAC could attest to.
 
 RUNNING IT
 
-Make sure you have Node.js >= 10 installed.
-Start it with `node index.js`
+Make sure you have Node.js >= 10 installed. See https://nodejs.org/en/ for
+installation instructions.
+
+Run `npx tube-panic` on your command line to play the game.
+If you prefer you can also clone this repository and start the game with
+`node index.js`.
 
 ---------------------------------------------------------------------------------
 

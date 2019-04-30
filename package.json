@@ -1,0 +1,22 @@
+{
+  "name": "tube-panic",
+  "version": "1.0.1",
+  "description": "CLI game inspired by CS history",
+  "main": "index.js",
+  "bin": {
+    "tube-panic": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hnrch02/tube-panic.git"
+  },
+  "author": "Heinrich Fenkart <hnrch02@gmail.com>",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/hnrch02/tube-panic/issues"
+  },
+  "homepage": "https://github.com/hnrch02/tube-panic#readme"
+}
