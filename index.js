@@ -1,6 +1,6 @@
 const fs = require('fs')
 const readline = require('readline')
-const EOL = require('os').EOL
+const endl = require('os').EOL
 const title = fs.readFileSync('title.txt')
 
 // Kudos to StackOverflow https://stackoverflow.com/a/41407246/3059393
@@ -57,8 +57,8 @@ class Game {
   }
 
   parseLevel (path) {
-    let level = fs.readFileSync(path).toString().split(EOL)
-    level = level.map(line => line.replace('\r', '').replace(EOL, '').split(''))
+    let level = fs.readFileSync(path).toString().split(endl)
+    level = level.map(line => line.replace('\r', '').replace(endl, '').split(''))
     level.forEach((line, y) => line.forEach((char, x) => {
       if (char === Game.PLAYER) {
         this.pos = { x, y, dir: 'A' }
@@ -106,21 +106,18 @@ class Game {
     })
 
     console.clear()
-    console.log(title.toString())
-    console.log()
+    console.log(title.toString(), endl)
     console.log(color('FgGreen', '               Press [s] to start'))
   }
 
   render () {
     console.clear()
-    console.log('SCORE:', this.score)
-    console.log()
+    console.log('SCORE:', this.score, endl)
 
     if (this.debug) {
       console.log('current pos:', this.pos)
       console.log('step count:', this.stepCount)
-      console.log('last rand:', this.lastRand)
-      console.log()
+      console.log('last rand:', this.lastRand, endl)
     }
 
     this.level.forEach((line, y) => {
@@ -142,10 +139,8 @@ class Game {
     })
 
     if (this.state === 2) {
-      console.log()
-      console.log('GAME OVER!')
-      console.log('SCORE:', this.score)
-      console.log()
+      console.log(endl, 'GAME OVER!')
+      console.log('SCORE:', this.score, endl)
       console.log('Press Ctrl+C to quit')
     }
   }
