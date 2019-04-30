@@ -51,7 +51,7 @@ W - Wall
 Walls block your movement.
 
 A, V, <, > - You
-This indicated the direction you are facing.
+This indicates the direction you are facing.
 
 ---------------------------------------------------------------------------------
 
