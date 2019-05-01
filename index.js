@@ -4,7 +4,8 @@ const path = require('path')
 const readline = require('readline')
 const endl = require('os').EOL
 const title = fs.readFileSync('title.txt')
-const highscores = fs.existsSync('./highscores.json') ? require('./highscores.json') : {}
+const highscoresPath = path.resolve(__dirname, './highscores.json')
+const highscores = fs.existsSync(highscoresPath) ? highscoresPath : {}
 
 // Kudos to StackOverflow https://stackoverflow.com/a/41407246/3059393
 const colors = {
@@ -46,7 +47,7 @@ process.stdin.setRawMode(true)
 process.stdout.write('\x1B[?25l') // Hide terminal cursor
 process.on('exit', () => {
   process.stdout.write('\x1B[?25h') // Show terminal cursor
-  fs.writeFileSync('./highscores.json', JSON.stringify(highscores, null, 4))
+  fs.writeFileSync(highscoresPath, JSON.stringify(highscores, null, 4))
 })
 
 process.stdin.on('keypress', (str, key) => {

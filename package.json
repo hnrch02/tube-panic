@@ -1,6 +1,6 @@
 {
   "name": "tube-panic",
-  "version": "1.1.2",
+  "version": "1.2.1",
   "description": "CLI game inspired by CS history",
   "main": "index.js",
   "bin": {
