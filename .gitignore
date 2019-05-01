@@ -110,3 +110,5 @@ typings/
 
 # DynamoDB Local files
 .dynamodb/
+
+highscores.json

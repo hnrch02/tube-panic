@@ -47,7 +47,11 @@ process.stdin.setRawMode(true)
 process.stdout.write('\x1B[?25l') // Hide terminal cursor
 process.on('exit', () => {
   process.stdout.write('\x1B[?25h') // Show terminal cursor
-  fs.writeFileSync(highscoresPath, JSON.stringify(highscores, null, 4))
+  try {
+    fs.writeFileSync(highscoresPath, JSON.stringify(highscores, null, 4))
+  } catch {
+    process.stderr.write('Could not save highscores.')
+  }
 })
 
 process.stdin.on('keypress', (str, key) => {
