@@ -169,14 +169,14 @@ class Game {
     if (this.debug) this.lastRand = rand
 
     if (rand > 750) {
-      if (this.failable.length === 0)
-        return this.state = 1
-
       let selectedIndex = getRandomInt(this.failable.length - 1)
       let selected = this.failable[selectedIndex]
 
       this.level[selected.y][selected.x].failed = true
       this.failable.splice(selectedIndex, 1)
+
+      if (this.failable.length === 0)
+        this.state = 1
     }
   }
 
