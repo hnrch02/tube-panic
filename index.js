@@ -5,7 +5,7 @@ const readline = require('readline')
 const endl = require('os').EOL
 const title = fs.readFileSync('title.txt')
 const highscoresPath = path.resolve(__dirname, './highscores.json')
-const highscores = fs.existsSync(highscoresPath) ? highscoresPath : {}
+const highscores = fs.existsSync(highscoresPath) ? require(highscoresPath) : {}
 
 // Kudos to StackOverflow https://stackoverflow.com/a/41407246/3059393
 const colors = {
@@ -122,7 +122,7 @@ class Game {
       return this.render()
     }
 
-    if (key.ctrl && key.shift && key.name === 'a') this.state = 1
+    if (key.ctrl && key.name === 'a') this.state = 1
 
     switch (key.name) {
       case 'w':
