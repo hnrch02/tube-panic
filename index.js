@@ -122,7 +122,7 @@ class Game {
       return this.render()
     }
 
-    if (key.ctrl && key.name === 'a') this.state = 1
+    if (key.ctrl && key.shift && key.name === 'a') this.state = 1
 
     switch (key.name) {
       case 'w':
