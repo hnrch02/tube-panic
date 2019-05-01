@@ -36,6 +36,8 @@ const colors = {
 
 const color = (name, text) => `${colors[name]}${text}${colors['Reset']}`
 const getRandomInt = max => Math.floor(Math.random() * Math.floor(max)) // https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Math/math.random
+const centerPrefix = (length) => ' '.repeat((process.stdout.getWindowSize()[0] - length) / 2)
+const center = (text) => centerPrefix(text.length) + text
 
 readline.emitKeypressEvents(process.stdin)
 process.stdin.setRawMode(true)
@@ -54,6 +56,7 @@ class Game {
     this.level = []
     this.listener = this.onKeypress.bind(this)
     this.onEnd = onEnd
+    this.maxLineLength = 0
     this.pos = {
       x: 0,
       y: 0,
@@ -68,7 +71,11 @@ class Game {
 
   parseLevel (filePath) {
     let level = fs.readFileSync(filePath).toString().split(endl)
-    level = level.map(line => line.replace('\r', '').replace(endl, '').split(''))
+    level = level.map(line => {
+      line = line.replace('\r', '').replace(endl, '')
+      if (line.length > this.maxLineLength) this.maxLineLength = line.length
+      return line.split('')
+    })
     level.forEach((line, y) => line.forEach((char, x) => {
       if (char === Game.PLAYER) {
         this.pos = { x, y, dir: 'A' }
@@ -119,15 +126,16 @@ class Game {
 
   render () {
     console.clear()
-    let output = `SCORE: ${this.score}${endl}${endl}`
+    let output = endl + center(`SCORE: ${this.score}`) + endl + endl
 
     if (this.debug) {
-      console.log('current pos:', this.pos)
-      console.log('step count:', this.stepCount)
-      console.log('last rand:', this.lastRand, endl)
+      console.log(center(`current pos: { x: ${this.pos.x}, y: ${this.pos.y} }`))
+      console.log(center(`step count: ${this.stepCount}`))
+      console.log(center(`last rand: ${this.lastRand}`), endl)
     }
 
     this.level.forEach((line, y) => {
+      output += centerPrefix(this.maxLineLength)
       line.forEach((char, x) => {
         if (Game.WALL.indexOf(char) !== -1)
           char = color('Dim', char)
@@ -148,9 +156,9 @@ class Game {
     process.stdout.write(output)
 
     if (this.state === 1) {
-      console.log(endl, 'GAME OVER!')
-      console.log('SCORE:', this.score, endl)
-      console.log('Press any key to continue')
+      console.log(endl, center('GAME OVER!'))
+      console.log(center(`SCORE: ${this.score}`), endl)
+      console.log(center('Press any key to continue'))
     }
   }
 
@@ -159,7 +167,7 @@ class Game {
       this.level[this.pos.y][this.pos.x] = Game.EMPTY
       this.pos.x = x
       this.pos.y = y
-    }
+    } else return
 
     ++this.stepCount
     this.score += this.stepCount * 10
@@ -292,19 +300,20 @@ class Menu {
 
   render () {
     console.clear()
-    console.log(title.toString(), endl)
-
-    let prefix = ' '.repeat(21)
+    console.log()
+    title.toString().split(endl).forEach(line => console.log(center(line)))
+    console.log()
 
     this.levels.forEach((level, index) => {
-      if (this.selected === index)
-        console.log(prefix + color('BgWhite', color('FgBlack', `[ ${level.name} ]`)))
-      else
-        console.log(`${prefix}  ${level.name}  `)
+      if (this.selected === index) {
+        let name = `[ ${level.name} ]`
+        console.log(centerPrefix(name.length) + color('BgWhite', color('FgBlack', name)))
+      } else
+        console.log(center(level.name))
     })
 
-    console.log(endl, color('Dim', ' '.repeat(9) + 'Use [up] or [down] to select level'))
-    console.log(endl, color('FgGreen', ' '.repeat(15) + 'Press [enter] to start'))
+    console.log(endl, color('Dim', center('Use [up] or [down] to select level')))
+    console.log(endl, color('FgGreen', center('Press [enter] to start')))
   }
 
   start () {
