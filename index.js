@@ -4,6 +4,7 @@ const path = require('path')
 const readline = require('readline')
 const endl = require('os').EOL
 const title = fs.readFileSync('title.txt')
+const highscores = fs.existsSync('./highscores.json') ? require('./highscores.json') : {}
 
 // Kudos to StackOverflow https://stackoverflow.com/a/41407246/3059393
 const colors = {
@@ -42,18 +43,26 @@ const center = (text) => centerPrefix(text.length) + text
 readline.emitKeypressEvents(process.stdin)
 process.stdin.setRawMode(true)
 
+process.stdout.write('\x1B[?25l') // Hide terminal cursor
+process.on('exit', () => {
+  process.stdout.write('\x1B[?25h') // Show terminal cursor
+  fs.writeFileSync('./highscores.json', JSON.stringify(highscores, null, 4))
+})
+
 process.stdin.on('keypress', (str, key) => {
   if (key.ctrl && key.name === 'c')
     return process.exit(0)
 })
 
 class Game {
-  constructor (filePath, debug, onEnd) {
+  constructor (level, debug, onEnd) {
     this.debug = debug
     this.state = 0 // 0 = running, 1 = game over
     this.score = 0
     this.stepCount = 0
     this.level = []
+    this.name = ''
+    this.highscores = highscores[level.filename]
     this.listener = this.onKeypress.bind(this)
     this.onEnd = onEnd
     this.maxLineLength = 0
@@ -64,7 +73,7 @@ class Game {
     }
     this.failable = []
 
-    this.parseLevel(filePath)
+    this.parseLevel(level.path)
     this.attachKeyboardEvent()
     this.render()
   }
@@ -100,8 +109,19 @@ class Game {
   }
 
   onKeypress (str, key) {
-    if (this.state === 1)
-      return this.end()
+    if (this.state === 1) {
+      if (key.name === 'return')
+        return this.end()
+
+      if (key.name === 'backspace')
+        this.name = this.name.substring(0, this.name.length - 1)
+      else
+        this.name += str
+
+      return this.render()
+    }
+
+    if (key.ctrl && key.name === 'a') this.state = 1
 
     switch (key.name) {
       case 'w':
@@ -124,9 +144,12 @@ class Game {
     this.render()
   }
 
-  render () {
+  render () { // TODO: optimize this with readline.clearLine
     console.clear()
     let output = endl + center(`SCORE: ${this.score}`) + endl + endl
+
+    if (this.highscores.length)
+      output += center(`HIGHSCORE: ${this.highscores[0].score} SET BY ${this.highscores[0].name}`) + endl + endl
 
     if (this.debug) {
       console.log(center(`current pos: { x: ${this.pos.x}, y: ${this.pos.y} }`))
@@ -158,7 +181,9 @@ class Game {
     if (this.state === 1) {
       console.log(endl, center('GAME OVER!'))
       console.log(center(`SCORE: ${this.score}`), endl)
-      console.log(center('Press any key to continue'))
+      console.log(center('Enter your name and confirm with [enter]:'), endl)
+      let name = ` ${this.name.padEnd(16)} `
+      console.log(centerPrefix(name.length) + color('BgWhite', color('FgBlack', name)))
     }
   }
 
@@ -236,6 +261,19 @@ class Game {
   }
 
   end () {
+    let inserted = false
+    let scoreObj = { name: this.name, score: this.score, createdAt: Date.now() }
+
+    this.highscores.forEach((entry, index) => {
+      if (this.score > entry.score) {
+        this.highscores.splice(index, 0, scoreObj)
+        inserted = true
+      }
+    })
+
+    if (!inserted)
+      this.highscores.push(scoreObj)
+
     this.detachKeyboardEvent()
     this.onEnd()
   }
@@ -264,10 +302,16 @@ class Menu {
   }
 
   getLevels (dirPath) {
-    this.levels = fs.readdirSync(dirPath).map((filename, index) => ({
-      name: path.basename(filename, '.txt').replace('_', ' '),
-      filename: path.resolve(dirPath, filename)
-    }))
+    this.levels = fs.readdirSync(dirPath).map((filename, index) => {
+      if (!highscores[filename])
+        highscores[filename] = []
+
+      return {
+        name: path.basename(filename, '.txt').replace('_', ' '),
+        path: path.resolve(dirPath, filename),
+        filename: filename
+      }
+    })
   }
 
   attachKeyboardEvent () {
@@ -319,7 +363,7 @@ class Menu {
   start () {
     this.detachKeyboardEvent()
 
-    new Game(this.levels[this.selected].filename, this.debug, () => {
+    new Game(this.levels[this.selected], this.debug, () => {
       this.attachKeyboardEvent()
       this.render()
     })
