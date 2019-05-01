@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const fs = require('fs')
+const path = require('path')
 const readline = require('readline')
 const endl = require('os').EOL
 const title = fs.readFileSync('title.txt')
@@ -39,13 +40,20 @@ const getRandomInt = max => Math.floor(Math.random() * Math.floor(max)) // https
 readline.emitKeypressEvents(process.stdin)
 process.stdin.setRawMode(true)
 
+process.stdin.on('keypress', (str, key) => {
+  if (key.ctrl && key.name === 'c')
+    return process.exit(0)
+})
+
 class Game {
-  constructor (path) {
-    this.debug = false
-    this.state = 0
+  constructor (filePath, debug, onEnd) {
+    this.debug = debug
+    this.state = 0 // 0 = running, 1 = game over
     this.score = 0
     this.stepCount = 0
     this.level = []
+    this.listener = this.onKeypress.bind(this)
+    this.onEnd = onEnd
     this.pos = {
       x: 0,
       y: 0,
@@ -53,12 +61,13 @@ class Game {
     }
     this.failable = []
 
-    this.parseLevel(path)
-    this.setup()
+    this.parseLevel(filePath)
+    this.attachKeyboardEvent()
+    this.render()
   }
 
-  parseLevel (path) {
-    let level = fs.readFileSync(path).toString().split(endl)
+  parseLevel (filePath) {
+    let level = fs.readFileSync(filePath).toString().split(endl)
     level = level.map(line => line.replace('\r', '').replace(endl, '').split(''))
     level.forEach((line, y) => line.forEach((char, x) => {
       if (char === Game.PLAYER) {
@@ -75,45 +84,42 @@ class Game {
     this.level = level
   }
 
-  setup () {
-    process.stdin.on('keypress', (str, key) => {
-      if (key.ctrl && key.name === 'c') return process.exit(0)
-      if (this.state === 0 && key.ctrl && key.name === 'd') this.debug = true
-      if (this.state === 0 && key.name === 's') {
-        this.state = 1
-        return this.render()
-      }
-      if (this.state !== 1) return
+  attachKeyboardEvent () {
+    process.stdin.on('keypress', this.listener)
+  }
 
-      switch (key.name) {
-        case 'w':
-          this.moveUp()
-          break
-        case 'a':
-          this.moveLeft()
-          break
-        case 's':
-          this.moveDown()
-          break
-        case 'd':
-          this.moveRight()
-          break
-        case 'e':
-          this.interact()
-          break
-      }
+  detachKeyboardEvent () {
+    process.stdin.off('keypress', this.listener)
+  }
 
-      this.render()
-    })
+  onKeypress (str, key) {
+    if (this.state === 1)
+      return this.end()
 
-    console.clear()
-    console.log(title.toString(), endl)
-    console.log(color('FgGreen', '               Press [s] to start'))
+    switch (key.name) {
+      case 'w':
+        this.moveUp()
+        break
+      case 'a':
+        this.moveLeft()
+        break
+      case 's':
+        this.moveDown()
+        break
+      case 'd':
+        this.moveRight()
+        break
+      case 'e':
+        this.interact()
+        break
+    }
+
+    this.render()
   }
 
   render () {
     console.clear()
-    console.log('SCORE:', this.score, endl)
+    let output = `SCORE: ${this.score}${endl}${endl}`
 
     if (this.debug) {
       console.log('current pos:', this.pos)
@@ -123,7 +129,7 @@ class Game {
 
     this.level.forEach((line, y) => {
       line.forEach((char, x) => {
-        if (char === Game.WALL)
+        if (Game.WALL.indexOf(char) !== -1)
           char = color('Dim', char)
 
         if (this.pos.y === y && this.pos.x === x)
@@ -134,15 +140,17 @@ class Game {
         else if (char.char)
           char = char.char
 
-        process.stdout.write(char)
+        output += char
       })
-      console.log('')
+      output += endl
     })
 
-    if (this.state === 2) {
+    process.stdout.write(output)
+
+    if (this.state === 1) {
       console.log(endl, 'GAME OVER!')
       console.log('SCORE:', this.score, endl)
-      console.log('Press Ctrl+C to quit')
+      console.log('Press any key to continue')
     }
   }
 
@@ -162,7 +170,7 @@ class Game {
 
     if (rand > 750) {
       if (this.failable.length === 0)
-        return this.state = 2
+        return this.state = 1
 
       let selectedIndex = getRandomInt(this.failable.length - 1)
       let selected = this.failable[selectedIndex]
@@ -218,11 +226,16 @@ class Game {
       this.score += this.stepCount * 20
     }
   }
+
+  end () {
+    this.detachKeyboardEvent()
+    this.onEnd()
+  }
 }
 
 Game.PLAYER = 'P'
 Game.BOARD = 'B'
-Game.WALL = 'W'
+Game.WALL = ['W', '╯', '╰', '─', '│', '╮', '╭']
 Game.EMPTY = ' '
 
 Game.UP = 'A'
@@ -230,4 +243,78 @@ Game.DOWN = 'V'
 Game.LEFT = '<'
 Game.RIGHT = '>'
 
-new Game('levels/Level_1.txt')
+class Menu {
+  constructor (dirPath) {
+    this.debug = false
+    this.levels = []
+    this.selected = 0
+    this.listener = this.onKeypress.bind(this)
+
+    this.getLevels(dirPath)
+    this.attachKeyboardEvent()
+    this.render()
+  }
+
+  getLevels (dirPath) {
+    this.levels = fs.readdirSync(dirPath).map((filename, index) => ({
+      name: path.basename(filename, '.txt').replace('_', ' '),
+      filename: path.resolve(dirPath, filename)
+    }))
+  }
+
+  attachKeyboardEvent () {
+    process.stdin.on('keypress', this.listener)
+  }
+
+  detachKeyboardEvent () {
+    process.stdin.off('keypress', this.listener)
+  }
+
+  onKeypress (str, key) {
+    if (key.ctrl && key.name === 'd') this.debug = true
+
+    switch (key.name) {
+      case 'up':
+      case 'w':
+        if (this.selected > 0) --this.selected
+        break
+      case 'down':
+      case 's':
+        if (this.selected < this.levels.length - 1) ++this.selected
+        break
+      case 'return':
+      case 'space':
+        return this.start()
+    }
+
+    this.render()
+  }
+
+  render () {
+    console.clear()
+    console.log(title.toString(), endl)
+
+    let prefix = Array(21).fill(' ').join('')
+
+    this.levels.forEach((level, index) => {
+      if (this.selected === index)
+        console.log(prefix + color('BgWhite', color('FgBlack', `[ ${level.name} ]`)))
+      else
+        console.log(`${prefix}  ${level.name}  `)
+    })
+
+    console.log(endl, color('Dim', '         Use [up] or [down] to select level'))
+    console.log(endl, color('FgGreen', '               Press [enter] to start'))
+  }
+
+  start () {
+    this.detachKeyboardEvent()
+
+    new Game(this.levels[this.selected].filename, this.debug, () => {
+      this.attachKeyboardEvent()
+      this.render()
+    })
+  }
+}
+
+new Menu('levels/')
