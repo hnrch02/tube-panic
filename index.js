@@ -294,7 +294,7 @@ class Menu {
     console.clear()
     console.log(title.toString(), endl)
 
-    let prefix = Array(21).fill(' ').join('')
+    let prefix = ' '.repeat(21)
 
     this.levels.forEach((level, index) => {
       if (this.selected === index)
@@ -303,8 +303,8 @@ class Menu {
         console.log(`${prefix}  ${level.name}  `)
     })
 
-    console.log(endl, color('Dim', '         Use [up] or [down] to select level'))
-    console.log(endl, color('FgGreen', '               Press [enter] to start'))
+    console.log(endl, color('Dim', ' '.repeat(9) + 'Use [up] or [down] to select level'))
+    console.log(endl, color('FgGreen', ' '.repeat(15) + 'Press [enter] to start'))
   }
 
   start () {
